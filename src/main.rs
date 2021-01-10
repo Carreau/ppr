@@ -11,12 +11,6 @@ use std::io::BufReader;
 use std::path::Path;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Section {
-    children: Option<Vec<String>>,
-    tag: AorB,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
 struct Document {
     #[serde(rename = "_content")]
     content: HashMap<String, Value>,
@@ -112,25 +106,27 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Ok(p) = mp {
             //println!("{:?}", p.display());
             let document = read_data_from_file(p)?;
-            if let Some(Some(ee)) = document.example_section_data {
-                for c in ee {
-                    match c {
-                        TopLevelBlock::Paragraph(_) => (),
-                        TopLevelBlock::DefList(_) => (),
-                        TopLevelBlock::BlockDirective(_) => (),
-                        TopLevelBlock::Fig(_) => (),
-                        TopLevelBlock::Code(code) => {
-                            code.entries
-                                .into_iter()
-                                .for_each(|entry| match entry.target {
-                                    Some(e) => {
-                                        if e.is_empty() == false {
-                                            //&prog.println(format!("  {}", &e));
-                                            ()
+            if let Some(example) = document.example_section_data {
+                if let Some(ee) = example.children {
+                    for c in ee {
+                        match c {
+                            TopLevelBlock::Paragraph(_) => (),
+                            TopLevelBlock::DefList(_) => (),
+                            TopLevelBlock::BlockDirective(_) => (),
+                            TopLevelBlock::Fig(_) => (),
+                            TopLevelBlock::Code(code) => {
+                                code.entries
+                                    .into_iter()
+                                    .for_each(|entry| match entry.target {
+                                        Some(e) => {
+                                            if e.is_empty() == false {
+                                                //&prog.println(format!("  {}", &e));
+                                                ()
+                                            }
                                         }
-                                    }
-                                    None => (),
-                                })
+                                        None => (),
+                                    })
+                            }
                         }
                     }
                 }
