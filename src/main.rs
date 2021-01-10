@@ -1,6 +1,8 @@
 use glob::glob;
 use serde::{Deserialize, Serialize};
 use serde_json::{Result, Value};
+use serde_tuple::{Deserialize_tuple, Serialize_tuple};
+use std::collections::HashMap;
 
 use std::error::Error;
 use std::fs::File;
@@ -33,7 +35,7 @@ struct Section {
 #[derive(Debug, Serialize, Deserialize)]
 struct Document {
     #[serde(rename = "_content")]
-    content: Value,
+    content: HashMap<String, Value>,
     refs: Vec<Value>,
     ordered_sections: Vec<Value>,
     see_also: Vec<Value>,
@@ -48,7 +50,47 @@ struct Document {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ExampleSectionData {
+    children: Option<Vec<TLB>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(tag = "type", content = "data")]
+enum TLB {
+    Paragraph(Paragraph),
+    DefList(DefList),
+    Code(Code),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Paragraph {
     children: Vec<Value>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct DefList {
+    children: Vec<DefListItem>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct DefListItem {
+    lines: Value,
+    wh: Value,
+    ind: Value,
+    dt: Paragraph, // todo wrong
+    dd: Paragraph,
+}
+
+#[derive(Debug, Serialize_tuple, Deserialize_tuple)]
+struct CodeEntry {
+    token: String,
+    target: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Code {
+    ce_status: String,
+    entries: Vec<CodeEntry>, // List[Tuple[Optional[str]]]
+    out: String,
 }
 
 fn read_data_from_file<P: AsRef<Path>>(path: P) -> Document {
@@ -73,12 +115,20 @@ fn main() {
         .take(500)
     {
         if let Ok(p) = mp {
+            //println!("{:?}", p.display());
             let document = read_data_from_file(p);
             if let Some(example) = document.example_section_data {
-                for c in example.children {
-                    match c {
-                        Value::Object(map) => println!("{:?}", map.get("type")),
-                        _ => println!("Nope"),
+                if let Some(ee) = example.children {
+                    for c in ee {
+                        match c {
+                            TLB::Paragraph(_) => println!("{:?}", "Paragraph"),
+                            TLB::DefList(_) => println!("{:?}", "Deflist"),
+                            TLB::Code(code) => {
+                                println!("{:?}", code.ce_status);
+                                println!("    {:?}", code.entries);
+                                println!("    {:?}", code.out);
+                            }
+                        }
                     }
                 }
             }
