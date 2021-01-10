@@ -1,8 +1,12 @@
 use glob::glob;
-use indicatif::{ProgressBar, ProgressIterator};
+#[allow(unused_imports)]
+use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator};
+#[allow(unused_imports)]
+use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use serde_tuple::{Deserialize_tuple, Serialize_tuple};
+
 use std::collections::HashMap;
 
 use std::error::Error;
@@ -14,10 +18,10 @@ use std::path::Path;
 struct Document {
     #[serde(rename = "_content")]
     content: HashMap<String, Value>,
-    refs: Vec<Value>,
-    ordered_sections: Vec<Value>,
-    see_also: Vec<Value>,
-    aliases: Vec<Value>,
+    refs: Vec<String>,
+    ordered_sections: Vec<String>,
+    see_also: Vec<SeeAlsoItem>,
+    aliases: Vec<String>,
     item_file: Option<String>,
     item_line: Option<i32>,
     item_type: Option<String>,
@@ -39,11 +43,26 @@ enum TopLevelBlock {
     Code(Code),
     BlockDirective(BlockDirective),
     Fig(Fig),
+    Words(Words),
+    Directive(Directive),
+    Verbatim(Verbatim),
+    Math(Math),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Paragraph {
-    children: Vec<Value>,
+    children: Vec<TopLevelBlock>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct SeeAlsoItem {
+    name: Value,
+    descriptions: Vec<Paragraph>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Math {
+    value: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -52,10 +71,26 @@ struct DefList {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+struct Line {
+    #[serde(rename = "_line")]
+    line: String,
+    #[serde(rename = "_number")]
+    number: u64,
+    #[serde(rename = "_offset")]
+    offset: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Lines {
+    #[serde(rename = "_lines")]
+    lines: Vec<Line>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct DefListItem {
-    lines: Value,
-    wh: Value,
-    ind: Value,
+    lines: Lines,
+    wh: Lines,
+    ind: Lines,
     dt: Paragraph, // todo wrong
     dd: Paragraph,
 }
@@ -76,13 +111,30 @@ struct Code {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct BlockDirective {
-    lines: Value,
-    wh: Value,
-    ind: Value,
+    lines: Lines,
+    wh: Lines,
+    ind: Lines,
 
     directive_name: String,
     args0: Vec<String>,
     inner: Option<Paragraph>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Directive {
+    value: Vec<String>,
+    domain: Option<String>,
+    role: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Words {
+    value: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Verbatim {
+    value: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -102,36 +154,35 @@ fn read_data_from_file<P: AsRef<Path>>(path: P) -> Result<Document, Box<dyn Erro
 fn main() -> Result<(), Box<dyn Error>> {
     let pth: Vec<_> = glob("/Users/bussonniermatthias/.papyri/ingest/*/*/module/*.json")?.collect();
 
-    for mp in pth.iter().progress() {
+    let bar = ProgressBar::new(pth.len() as u64);
+
+    pth.iter().progress_with(bar).for_each(|mp| {
         if let Ok(p) = mp {
             //println!("{:?}", p.display());
-            let document = read_data_from_file(p)?;
+            let document = read_data_from_file(p).unwrap();
             if let Some(example) = document.example_section_data {
                 if let Some(ee) = example.children {
                     for c in ee {
                         match c {
-                            TopLevelBlock::Paragraph(_) => (),
-                            TopLevelBlock::DefList(_) => (),
-                            TopLevelBlock::BlockDirective(_) => (),
-                            TopLevelBlock::Fig(_) => (),
                             TopLevelBlock::Code(code) => {
                                 code.entries
                                     .into_iter()
                                     .for_each(|entry| match entry.target {
                                         Some(e) => {
                                             if e.is_empty() == false {
-                                                //&prog.println(format!("  {}", &e));
+                                                // println!("  {}", &e);
                                                 ()
                                             }
                                         }
                                         None => (),
                                     })
                             }
+                            _ => (),
                         }
                     }
                 }
             }
         }
-    }
+    });
     Ok(())
 }
