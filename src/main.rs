@@ -59,6 +59,8 @@ enum TopLevelBlock {
     Paragraph(Paragraph),
     DefList(DefList),
     Code(Code),
+    BlockDirective(BlockDirective),
+    Fig(Fig),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -93,6 +95,22 @@ struct Code {
     out: String,
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+struct BlockDirective {
+    lines: Value,
+    wh: Value,
+    ind: Value,
+
+    directive_name: String,
+    args0: Vec<String>,
+    inner: Option<Paragraph>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Fig {
+    value: String,
+}
+
 fn read_data_from_file<P: AsRef<Path>>(path: P) -> Result<Document, Box<dyn Error>> {
     let file = File::open(path)?;
     let reader = BufReader::new(file);
@@ -116,7 +134,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     //.take(500)
     {
         if let Ok(p) = mp {
-            //println!("{:?}", p.display());
+            println!("{:?}", p.display());
             let document = read_data_from_file(p)?;
             if let Some(example) = document.example_section_data {
                 if let Some(ee) = example.children {
@@ -124,13 +142,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                         match c {
                             TopLevelBlock::Paragraph(_) => (),
                             TopLevelBlock::DefList(_) => (),
+                            TopLevelBlock::BlockDirective(_) => (),
+                            TopLevelBlock::Fig(_) => (),
                             TopLevelBlock::Code(code) => {
                                 code.entries
                                     .into_iter()
                                     .for_each(|entry| match entry.target {
                                         Some(e) => {
                                             if e.is_empty() == false {
-                                                println!("{}", e)
+                                                println!("  {}", e)
                                             }
                                         }
                                         None => (),
