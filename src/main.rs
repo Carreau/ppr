@@ -38,12 +38,17 @@ struct Document {
     ordered_sections: Vec<Value>,
     see_also: Vec<Value>,
     aliases: Vec<Value>,
-    item_file: String,
-    item_line: i32,
-    item_type: String,
-    version: String,
-    logo: String,
-    example_section_data: Value,
+    item_file: Option<String>,
+    item_line: Option<i32>,
+    item_type: Option<String>,
+    version: Option<String>,
+    logo: Option<String>,
+    example_section_data: Option<ExampleSectionData>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct ExampleSectionData {
+    children: Vec<Value>,
 }
 
 fn read_data_from_file<P: AsRef<Path>>(path: P) -> Document {
@@ -63,12 +68,17 @@ fn main() {
     //let data = serde_json::to_string(&sec).unwrap();
     //println!("Hello, world! {}", data);
 
-    for mp in glob("/Users/bussonniermatthias/.papyri/ingest/*/*/module/*.json").unwrap()
-    //.take(50)
+    for mp in glob("/Users/bussonniermatthias/.papyri/ingest/*/*/module/*.json")
+        .unwrap()
+        .take(5)
     {
         if let Ok(p) = mp {
-            //println!("{:?}", read_data_from_file(p));
-            print!(".")
+            let document = read_data_from_file(p);
+            if let Some(example) = document.example_section_data {
+                for c in example.children {
+                    println!("{:?}", c);
+                }
+            }
         }
     }
 }
