@@ -42,7 +42,7 @@ enum MaybeTL {
     S(String),
     L(Vec<String>),
     SeeAlso(Vec<Vec<Value>>),
-    D(HashMap<String, String>),
+    D(HashMap<(), ()>),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
