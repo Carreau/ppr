@@ -17,7 +17,7 @@ use std::path::Path;
 #[derive(Debug, Serialize, Deserialize)]
 struct Document {
     #[serde(rename = "_content")]
-    content: HashMap<String, Value>,
+    content: HashMap<String, Option<MaybeTL>>,
     refs: Vec<String>,
     ordered_sections: Vec<String>,
     see_also: Vec<SeeAlsoItem>,
@@ -31,8 +31,30 @@ struct Document {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+struct Section {
+    children: Vec<TopLevelBlock>,
+}
+
+#[serde(untagged)]
+#[derive(Debug, Serialize, Deserialize)]
+enum MaybeTL {
+    Section(Section),
+    S(String),
+    L(Vec<String>),
+    SeeAlso(Vec<Vec<Value>>),
+    D(HashMap<String, String>),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct ExampleSectionData {
     children: Option<Vec<TopLevelBlock>>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Param {
+    param: String,
+    type_: String,
+    desc: Vec<TopLevelBlock>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -47,6 +69,18 @@ enum TopLevelBlock {
     Directive(Directive),
     Verbatim(Verbatim),
     Math(Math),
+    Param(Param),
+    BlockVerbatim(BlockVerbatim),
+    Example(Example),
+    Link(Link),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Link {
+    value: String,
+    reference: Value,
+    kind: String,
+    exists: bool,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -110,6 +144,13 @@ struct Code {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+struct Example {
+    lines: Lines,
+    wh: Lines,
+    ind: Lines,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct BlockDirective {
     lines: Lines,
     wh: Lines,
@@ -118,6 +159,11 @@ struct BlockDirective {
     directive_name: String,
     args0: Vec<String>,
     inner: Option<Paragraph>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct BlockVerbatim {
+    lines: Lines,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
