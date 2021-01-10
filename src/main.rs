@@ -70,13 +70,16 @@ fn main() {
 
     for mp in glob("/Users/bussonniermatthias/.papyri/ingest/*/*/module/*.json")
         .unwrap()
-        .take(5)
+        .take(500)
     {
         if let Ok(p) = mp {
             let document = read_data_from_file(p);
             if let Some(example) = document.example_section_data {
                 for c in example.children {
-                    println!("{:?}", c);
+                    match c {
+                        Value::Object(map) => println!("{:?}", map.get("type")),
+                        _ => println!("Nope"),
+                    }
                 }
             }
         }
