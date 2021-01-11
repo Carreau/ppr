@@ -80,9 +80,17 @@ enum TopLevelBlock {
 #[derive(Debug, Serialize, Deserialize)]
 struct Link {
     value: String,
-    reference: Value,
+    reference: RefInfo,
     kind: String,
     exists: bool,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct RefInfo {
+    module: Option<String>,
+    version: Option<String>,
+    kind: String,
+    path: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -92,8 +100,16 @@ struct Paragraph {
 
 #[derive(Debug, Serialize, Deserialize)]
 struct SeeAlsoItem {
-    name: Value,
+    name: Ref,
     descriptions: Vec<Paragraph>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Ref {
+    name: String,
+    #[serde(rename = "ref")]
+    target: Option<String>,
+    exists: Option<bool>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -215,7 +231,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         if let Ok(p) = mp {
             //println!("{:?}", p.display());
             let val = format!("{:?}", p.display());
-            println!("{}", HTMLTemplate { name: val.as_str() }.render().unwrap());
+            //println!("{}", HTMLTemplate { name: val.as_str() }.render().unwrap());
             let document = read_data_from_file(p).unwrap();
             if let Some(example) = document.example_section_data {
                 if let Some(ee) = example.children {
