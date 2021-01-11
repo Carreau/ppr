@@ -14,6 +14,8 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
 
+use askama::Template;
+
 #[derive(Debug, Serialize, Deserialize)]
 struct Document {
     #[serde(rename = "_content")]
@@ -197,6 +199,13 @@ fn read_data_from_file<P: AsRef<Path>>(path: P) -> Result<Document, Box<dyn Erro
     Ok(u)
 }
 
+#[derive(Template)] // this will generate the code...
+#[template(path = "base.html")] // using the template in this path, relative
+                                // to the `templates` dir in the crate root
+struct HTMLTemplate<'a> {
+    name: &'a str,
+}
+
 fn main() -> Result<(), Box<dyn Error>> {
     let pth: Vec<_> = glob("/Users/bussonniermatthias/.papyri/ingest/*/*/module/*.json")?.collect();
 
@@ -205,6 +214,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     pth.iter().progress_with(bar).for_each(|mp| {
         if let Ok(p) = mp {
             //println!("{:?}", p.display());
+            let val = format!("{:?}", p.display());
+            println!("{}", HTMLTemplate { name: val.as_str() }.render().unwrap());
             let document = read_data_from_file(p).unwrap();
             if let Some(example) = document.example_section_data {
                 if let Some(ee) = example.children {
