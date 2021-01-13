@@ -17,6 +17,7 @@ use std::path::Path;
 use askama::Template;
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Document {
     #[serde(rename = "_content")]
     content: HashMap<String, Option<MaybeTL>>,
@@ -30,15 +31,19 @@ struct Document {
     version: Option<String>,
     logo: Option<String>,
     example_section_data: Option<ExampleSectionData>,
+    signature: Option<String>,
+    references: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Section {
     children: Vec<TopLevelBlock>,
 }
 
 #[serde(untagged)]
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 enum MaybeTL {
     Section(Section),
     S(String),
@@ -46,11 +51,13 @@ enum MaybeTL {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct ExampleSectionData {
     children: Option<Vec<TopLevelBlock>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Param {
     param: String,
     type_: String,
@@ -59,6 +66,7 @@ struct Param {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type", content = "data")]
+#[serde(deny_unknown_fields)]
 enum TopLevelBlock {
     Paragraph(Paragraph),
     DefList(DefList),
@@ -76,6 +84,7 @@ enum TopLevelBlock {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Link {
     value: String,
     reference: RefInfo,
@@ -84,6 +93,7 @@ struct Link {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct RefInfo {
     module: Option<String>,
     version: Option<String>,
@@ -92,17 +102,22 @@ struct RefInfo {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Paragraph {
     children: Vec<TopLevelBlock>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct SeeAlsoItem {
     name: Ref,
     descriptions: Vec<Paragraph>,
+    #[serde(rename = "type")]
+    ty: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Ref {
     name: String,
     #[serde(rename = "ref")]
@@ -111,16 +126,19 @@ struct Ref {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Math {
     value: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct DefList {
     children: Vec<DefListItem>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Line {
     #[serde(rename = "_line")]
     line: String,
@@ -131,12 +149,14 @@ struct Line {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Lines {
     #[serde(rename = "_lines")]
     lines: Vec<Line>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct DefListItem {
     lines: Lines,
     wh: Lines,
@@ -146,6 +166,7 @@ struct DefListItem {
 }
 
 #[derive(Debug, Serialize_tuple, Deserialize_tuple)]
+#[serde(deny_unknown_fields)]
 struct CodeEntry {
     token: String,
     target: Option<String>,
@@ -153,6 +174,7 @@ struct CodeEntry {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Code {
     ce_status: String,
     entries: Vec<CodeEntry>, // List[Tuple[Optional[str]]]
@@ -160,6 +182,7 @@ struct Code {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Example {
     lines: Lines,
     wh: Lines,
@@ -167,6 +190,7 @@ struct Example {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct BlockDirective {
     lines: Lines,
     wh: Lines,
@@ -178,11 +202,13 @@ struct BlockDirective {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct BlockVerbatim {
     lines: Lines,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Directive {
     value: Vec<String>,
     domain: Option<String>,
@@ -190,16 +216,19 @@ struct Directive {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Words {
     value: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Verbatim {
     value: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Fig {
     value: String,
 }
@@ -228,7 +257,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     pth.iter().progress_with(bar).for_each(|mp| {
         if let Ok(p) = mp {
             //println!("{:?}", p.display());
-            let val = format!("{:?}", p.display());
+            //let val = format!("{:?}", p.display());
             //println!("{}", HTMLTemplate { name: val.as_str() }.render().unwrap());
             let document = read_data_from_file(p).unwrap();
             if let Some(example) = document.example_section_data {
