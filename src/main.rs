@@ -16,6 +16,8 @@ use std::path::Path;
 
 use askama::Template;
 
+use ::ppr::Point;
+
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Document {

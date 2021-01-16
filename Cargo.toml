@@ -16,7 +16,12 @@ rayon = "1.5.0"
 askama = "0.10.5"
 
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["cdylib","rlib"]
+name = "ppr"
 
 [profile.dev]
 incremental = true
+
+[dependencies.pyo3]
+version = "0.13.1"
+features = ["extension-module"]
