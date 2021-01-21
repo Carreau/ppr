@@ -25,3 +25,7 @@ incremental = true
 [dependencies.pyo3]
 version = "0.13.1"
 features = ["extension-module"]
+
+[features]
+extension-module = ["pyo3/extension-module"]
+default = ["extension-module"]
