@@ -1,29 +1,22 @@
-use pyo3::prelude::*;
-use pyo3::wrap_pyfunction;
+//use pyo3::prelude::*;
+//use pyo3::wrap_pyfunction;
 use serde::{Deserialize, Serialize};
 use serde_tuple::{Deserialize_tuple, Serialize_tuple};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::BufReader;
-use std::path::Path;
 
 // /// Formats the sum of two numbers as string.
 // #[pyfunction]
 // fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
 //     Ok((a + b).to_string())
 // }
-#[pyclass]
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Document {
     #[serde(rename = "_content")]
     pub content: HashMap<String, Option<MaybeTL>>,
-    #[pyo3(get, set)]
     pub refs: Vec<String>,
-    #[pyo3(get, set)]
     pub ordered_sections: Vec<String>,
     pub see_also: Vec<SeeAlsoItem>,
-    #[pyo3(get, set)]
     pub aliases: Vec<String>,
     pub item_file: Option<String>,
     pub item_line: Option<i32>,
@@ -35,14 +28,14 @@ pub struct Document {
     pub references: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Section {
     pub children: Vec<TopLevelBlock>,
 }
 
 #[serde(untagged)]
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub enum MaybeTL {
     Section(Section),
@@ -50,13 +43,13 @@ pub enum MaybeTL {
     L(Vec<String>),
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ExampleSectionData {
     pub children: Option<Vec<TopLevelBlock>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Param {
     param: String,
@@ -64,7 +57,7 @@ pub struct Param {
     desc: Vec<TopLevelBlock>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(tag = "type", content = "data")]
 #[serde(deny_unknown_fields)]
 pub enum TopLevelBlock {
@@ -83,15 +76,13 @@ pub enum TopLevelBlock {
     Link(Link),
 }
 
-#[pyclass]
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Paragraph {
     children: Vec<TopLevelBlock>,
 }
 
-#[pyclass]
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SeeAlsoItem {
     name: Ref,
@@ -100,7 +91,7 @@ pub struct SeeAlsoItem {
     ty: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Ref {
     name: String,
@@ -109,19 +100,19 @@ pub struct Ref {
     exists: Option<bool>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Math {
     value: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DefList {
     children: Vec<DefListItem>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Line {
     #[serde(rename = "_line")]
@@ -132,14 +123,14 @@ pub struct Line {
     offset: u64,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Lines {
     #[serde(rename = "_lines")]
     lines: Vec<Line>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DefListItem {
     lines: Lines,
@@ -149,7 +140,7 @@ pub struct DefListItem {
     dd: Paragraph,
 }
 
-#[derive(Debug, Serialize_tuple, Deserialize_tuple, Clone)]
+#[derive(Debug, Serialize_tuple, Deserialize_tuple)]
 #[serde(deny_unknown_fields)]
 pub struct CodeEntry {
     pub token: String,
@@ -157,7 +148,7 @@ pub struct CodeEntry {
     pub pygc: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Code {
     pub ce_status: String,
@@ -165,7 +156,7 @@ pub struct Code {
     pub out: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Example {
     pub lines: Lines,
@@ -173,7 +164,7 @@ pub struct Example {
     pub ind: Lines,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BlockDirective {
     pub lines: Lines,
@@ -185,13 +176,13 @@ pub struct BlockDirective {
     pub inner: Option<Paragraph>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct BlockVerbatim {
     lines: Lines,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Directive {
     value: Vec<String>,
@@ -199,25 +190,25 @@ pub struct Directive {
     role: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Words {
     value: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Verbatim {
     value: Vec<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Fig {
     value: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Link {
     value: String,
@@ -226,8 +217,7 @@ pub struct Link {
     exists: bool,
 }
 
-#[pyclass]
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct RefInfo {
     module: Option<String>,
@@ -235,23 +225,14 @@ pub struct RefInfo {
     kind: String,
     path: String,
 }
-#[pyclass]
-#[derive(Clone)]
-pub struct Point {
-    #[pyo3(get, set)]
-    x: i64,
-    #[pyo3(get, set)]
-    y: i64,
-}
-
-#[pyfunction]
-fn read_document(s: String) -> Document {
-    let path = Path::new(&s);
-    let file = File::open(path).unwrap();
-    let reader = BufReader::new(file);
-    let u = serde_json::from_reader(reader).unwrap();
-    u
-}
+// #[pyclass]
+// #[derive(Clone)]
+// pub struct Point {
+//     #[pyo3(get, set)]
+//     x: i64,
+//     #[pyo3(get, set)]
+//     y: i64,
+// }
 
 //#[pymethods]
 //impl Point {
@@ -278,12 +259,11 @@ fn read_document(s: String) -> Document {
 //}
 //
 ///// A Python module implemented in Rust.
-#[pymodule]
-fn ppr(_py: Python, m: &PyModule) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(read_document, m)?)?;
-    m.add_class::<RefInfo>()?;
-    m.add_class::<Document>()?;
-    //    m.add_class::<MyVec>()?;
-    //
-    Ok(())
-}
+//#[pymodule]
+//fn ppr(_py: Python, m: &PyModule) -> PyResult<()> {
+//    //    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+//    //    m.add_class::<Point>()?;
+//    //    m.add_class::<MyVec>()?;
+//    //
+//    Ok(())
+//}
