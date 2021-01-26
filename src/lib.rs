@@ -14,7 +14,7 @@ use std::collections::HashMap;
 pub struct Document {
     #[serde(rename = "_content")]
     pub content: HashMap<String, Option<MaybeTL>>,
-    pub refs: Vec<String>,
+    pub refs: Vec<Link>,
     pub ordered_sections: Vec<String>,
     pub see_also: Vec<SeeAlsoItem>,
     pub aliases: Vec<String>,
