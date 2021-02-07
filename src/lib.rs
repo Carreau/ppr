@@ -13,7 +13,7 @@ use std::collections::HashMap;
 #[serde(deny_unknown_fields)]
 pub struct Document {
     #[serde(rename = "_content")]
-    pub content: HashMap<String, Option<MaybeTL>>,
+    pub content: HashMap<String, Option<Section>>,
     pub refs: Vec<Link>,
     pub ordered_sections: Vec<String>,
     pub see_also: Vec<SeeAlsoItem>,
@@ -26,12 +26,27 @@ pub struct Document {
     pub example_section_data: Option<ExampleSectionData>,
     pub signature: Option<String>,
     pub references: Option<Vec<String>>,
+    pub qa: String,
+    pub arbitrary: Vec<Section>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BulletList {
+    pub value: Vec<TopLevelBlock>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct EnumeratedList {
+    pub value: Vec<TopLevelBlock>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Section {
     pub children: Vec<TopLevelBlock>,
+    pub title: Option<String>,
 }
 
 #[serde(untagged)]
@@ -47,6 +62,7 @@ pub enum MaybeTL {
 #[serde(deny_unknown_fields)]
 pub struct ExampleSectionData {
     pub children: Option<Vec<TopLevelBlock>>,
+    pub title: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -74,12 +90,16 @@ pub enum TopLevelBlock {
     BlockVerbatim(BlockVerbatim),
     Example(Example),
     Link(Link),
+    BulletList(BulletList),
+    EnumeratedList(EnumeratedList),
+    BlockQuote(BlockQuote),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Paragraph {
-    children: Vec<TopLevelBlock>,
+    pub inline: Vec<TopLevelBlock>,
+    pub inner: Vec<TopLevelBlock>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -137,7 +157,7 @@ pub struct DefListItem {
     wh: Lines,
     ind: Lines,
     dt: Paragraph, // todo wrong
-    dd: Paragraph,
+    dd: Vec<TopLevelBlock>,
 }
 
 #[derive(Debug, Serialize_tuple, Deserialize_tuple)]
@@ -180,6 +200,12 @@ pub struct BlockDirective {
 #[serde(deny_unknown_fields)]
 pub struct BlockVerbatim {
     lines: Lines,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct BlockQuote {
+    value: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
