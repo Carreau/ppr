@@ -5,10 +5,12 @@ use indicatif::{ParallelProgressIterator, ProgressBar, ProgressIterator};
 use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
 //use serde_json::Value;
 
+use std::collections::HashMap;
 use std::error::Error;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::Path;
+use std::time::Instant;
 
 use askama::Template;
 
@@ -34,13 +36,13 @@ fn cc(b: &TopLevelBlock, count: u64) -> u64 {
     return match b {
         TopLevelBlock::Paragraph(p) => {
             p.inline.iter().map(|item| cc(item, count)).sum::<u64>()
-                //+ (p.inner.iter().map(|item| cc(item, count)).sum())
+            //+ (p.inner.iter().map(|item| cc(item, count)).sum())
         }
         TopLevelBlock::BulletList(b) => b.value.iter().map(|item| cc(item, count)).sum(),
         TopLevelBlock::EnumeratedList(b) => b.value.iter().map(|item| cc(item, count)).sum(),
         TopLevelBlock::BlockQuote(_) => 0,
         TopLevelBlock::DefList(_) => 1,
-        TopLevelBlock::Code(_) => 0,
+        TopLevelBlock::Code2(_) => 0,
         TopLevelBlock::BlockDirective(_) => 0,
         TopLevelBlock::Fig(_) => 0,
         TopLevelBlock::Words(_) => 0,
@@ -51,6 +53,7 @@ fn cc(b: &TopLevelBlock, count: u64) -> u64 {
         TopLevelBlock::BlockVerbatim(_) => 0,
         TopLevelBlock::Example(_) => 0,
         TopLevelBlock::Link(_) => 0,
+        TopLevelBlock::Admonition(_) => 0,
     };
 }
 
@@ -59,8 +62,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     let bar = ProgressBar::new(pth.len() as u64);
     let mut count: u64 = 0;
+
+    let mut timings = HashMap::<&Path, u128>::new();
     pth.iter().progress_with(bar).for_each(|mp| {
         if let Ok(p) = mp {
+            let now = Instant::now();
             //println!("{:?}", p.display());
             //let val = format!("{:?}", p.display());
             //println!("{}", HTMLTemplate { name: val.as_str() }.render().unwrap());
@@ -93,8 +99,18 @@ fn main() -> Result<(), Box<dyn Error>> {
             //         }
             //     }
             // }
+            let sec = now.elapsed().as_micros();
+            timings.insert(p, sec);
         }
     });
+    let mut slow: Vec<(&&std::path::Path, &u128)> = timings.iter().collect();
+
+    slow.sort_by(|x, y| y.1.cmp(&x.1));
+    let t3: Vec<_> = slow.iter().take(10).collect();
+    println!("10 slowest loading:");
+    for t in t3 {
+        println!("    {:?}:{:?}", t.0, t.1);
+    }
     println!("{:?}", count);
     Ok(())
 }

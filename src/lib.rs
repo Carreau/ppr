@@ -78,8 +78,10 @@ pub struct Param {
 #[serde(deny_unknown_fields)]
 pub enum TopLevelBlock {
     Paragraph(Paragraph),
+    Admonition(Admonition),
     DefList(DefList),
-    Code(Code),
+    //Code(Code),
+    Code2(Code2),
     BlockDirective(BlockDirective),
     Fig(Fig),
     Words(Words),
@@ -178,10 +180,53 @@ pub struct Code {
 
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub struct Code2 {
+    pub ce_status: String,
+    pub entries: Vec<Token>, // List[Tuple[Optional[str]]]
+    pub out: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+#[serde(tag = "type", content = "data")]
+pub enum LinkOrString {
+    Link(Link),
+    #[serde(rename = "str")]
+    Str(String),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Token {
+    #[serde(rename = "type")]
+    pub ty: Option<String>,
+    pub link: LinkOrString,
+}
+
+//class Token(Node):
+//    type: Optional[str]
+//    link: Union[Link, str]
+//
+//
+//class Code2(Node):
+//    entries: List[Token]
+//    out: str
+//    ce_status: str
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Example {
     pub lines: Lines,
     pub wh: Lines,
     pub ind: Lines,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Admonition {
+    pub kind: String,
+    pub title: Option<String>,
+    pub children: Option<Vec<Paragraph>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

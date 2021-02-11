@@ -21,6 +21,10 @@ name = "ppr"
 
 [profile.dev]
 incremental = true
+debug = false
+rpath = false
+lto = false
+debug-assertions = false
 
 [dependencies.pyo3]
 version = "0.13.1"
